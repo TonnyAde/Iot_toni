@@ -1,56 +1,69 @@
+/*
+*     source code ini berfungsi untuk mengontrol lampu
+*     menggunakan web server dengan microcontroller 
+*     esp32 devkit v4. 
+*
+*     Template by   : RUI SANTOS
+*     Created By    : Tonny Adetya Pratama.
+*
+*     Kalau mau pake source code ini harap jangan hapus bagian ini.
+*     Terima kasih, Jika ada kendala bisa hubungi saya.
+*
+*/
+
 #include <WiFi.h>
 #include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C lcd(0x27, 20, 4);
+//init lcd, (addres i2c,col, row);
+LiquidCrystal_I2C lcd(0x27, 20, 4); 
 
-// Replace with your network credentials
-const char *ssid = "Delameta";
-const char *password = "delameta1407";
-//wifi rumah
-//const char *ssid = "UDIN";
-//const char *password = "18021998";
+// untuk mengatur nama wifi dan passwordnya
+const char *ssid = "nama_wifi";
+const char *password = "password_wifi";
 
-// Set web server port number to 80
+// set port ke server 80
+// bawaan dari library wifi.h 80
 WiFiServer server(80);
 
 // Variable to store the HTTP request
 String header;
 
-// Auxiliar variables to store the current output state
+// statet ini bergungsi untuk menghandler status
 String output16State = "off";
 String output17State = "off";
 String output18State = "off";
 String output19State = "off";
 
-// Assign output variables to GPIO pins
+// Set pin gpio 
 const int output16 = 16;
 const int output17 = 17;
 const int output18 = 18;
 const int output19 = 19;
+
+//gpio untuk led indikator wifi
 const int wifion = 15;
 const int wifioff = 35;
 
-// Current time
+// Waktu Sekarang
 unsigned long currentTime = millis();
-// Previous time
+// Waktu sebelumnya
 unsigned long previousTime = 0;
-// Define timeout time in milliseconds (example: 2000ms = 2s)
+// Define timeout time di milliseconds (contoh: 2000ms = 2s)
 const long timeoutTime = 2000;
 
 void setup()
 {
-  lcd.init(); // initialize the lcd
+  lcd.init(); // inisialisasi LCD
   lcd.backlight();
   Serial.begin(115200);
-  lcd.setCursor(3, 0);
-  // print message
+  
+  lcd.setCursor(3, 0); //set posisi (col, row)
   lcd.print("Hello, World!");
   delay(1000);
-  // clears the display to print new message
-  lcd.clear();
+  lcd.clear(); // untuk menghapus isi LCD
 
   // Initialize the output variables as outputs
-
+  // inisialisasi gpio di mode output 
   pinMode(output16, OUTPUT);
   pinMode(output17, OUTPUT);
   pinMode(output18, OUTPUT);
@@ -59,12 +72,15 @@ void setup()
   pinMode(wifioff, OUTPUT);
 
   // set output to HIGH for turning off the lamp because we used an active low relay.
-  // But, if an active high relay is used, you can set the ouput to LOW for turning off the lamp.
+  // But, if an active high relay is used, you can set the ouput to LOW for turning off the lamp. 
+  // set output ke HIGH untuk mematikan lampu di awal, karena saya pakai relay aktif low
+  // tetapi, jika menggunakan relay aktif high, kamu bisa set outputnya ke low untuk mematikan lmapu di awal
   digitalWrite(output16, HIGH);
   digitalWrite(output17, HIGH);
   digitalWrite(output18, HIGH);
   digitalWrite(output19, HIGH);
-  //set wifi status
+  
+  //set led indikator wifi
   digitalWrite(wifioff, LOW);
   digitalWrite(wifion, LOW);
 
@@ -94,33 +110,12 @@ void setup()
   lcd.print(" Your IP is: ");
   lcd.setCursor(4, 1);
   lcd.print(WiFi.localIP());
-  // const char *iptmp="";
-  // const char *iptmp2="";
-  // sprintf(iptmp2,"%s",WiFi.localIP());
-  // memcpy(iptmp, iptmp2, strlen(iptmp2)-4);
-  // Serial.print("IP TMP: ");
-  // Serial.println(iptmp);
-  // if(memcmp(iptmp,"172.16.17",9)==0)
-  //  {
-  //      Serial.println("ip satu segment");
-  //      digitalWrite(wifion, HIGH);
-  //  }
-  //  else
-  //  {
-  //     Serial.println("ip beda segment");
-  //     while (1)
-  //     {
-  //       digitalWrite(wifion, HIGH);
-  //       delay(500);
-  //     }
-
-  //  }
   digitalWrite(wifion, HIGH);
 }
 
 void loop()
 {
-  WiFiClient client = server.available(); // Listen for incoming clients
+  WiFiClient client = server.available(); 
 
   if (client)
   { // If a new client connects,
